@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我們的專屬回憶錄</title>
+    <title>我們的專屬多媒體回憶錄</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -26,17 +26,14 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .birthday-tag {
-            background: linear-gradient(90deg, #ffecd2 0%, #fcb69f 100%);
-        }
-
         /* 媒體卡片動畫 */
         .media-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            break-inside: avoid;
         }
         .media-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
         /* 燈箱樣式 */
@@ -48,27 +45,42 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
         }
 
-        /* 天氣小卡樣式 */
-        .weather-info {
-            font-size: 0.85rem;
-            color: #ff6b81;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        /* 瀑布流佈局 */
+        .masonry-grid {
+            column-count: 2;
+            column-gap: 1.5rem;
+        }
+        @media (min-width: 768px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 4; } }
+
+        /* 個人專區樣式 */
+        .member-avatar {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid white;
+        }
+        .member-card:hover .member-avatar {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 25px -5px rgba(255, 154, 158, 0.5);
+            border-color: #ff9a9e;
+        }
+        .member-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .member-card:hover .member-avatar img {
+            transform: scale(1.1);
         }
 
-        /* 相簿隱藏/顯示動畫 */
-        .album-content {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* 滾動條美化 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ffb6c1; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -77,140 +89,96 @@
     <nav class="sticky top-0 z-50 card-glass p-4 flex justify-between items-center max-w-6xl mx-auto rounded-b-2xl shadow-sm">
         <div class="flex flex-col">
             <div class="text-xl font-bold text-pink-500 px-2"><i class="fas fa-heart mr-2"></i>我們的回憶</div>
-            <!-- 即時天氣顯示區 -->
-            <div id="weather-display" class="px-2 weather-info opacity-0 transition-opacity duration-500">
-                <i id="weather-icon" class="fas fa-cloud-sun"></i>
-                <span id="weather-text">獲取天氣中...</span>
-            </div>
         </div>
-        <div class="space-x-3 md:space-x-6 text-sm md:text-base">
-            <a href="#birthdays" class="hover:text-pink-500 font-medium">重要生日</a>
-            <a href="#counter" class="hover:text-pink-500 font-medium">認識天數</a>
-            <a href="#special-zone" class="hover:text-pink-500 font-medium">芊如&郁庭</a>
-            <a href="#special-zone-2" class="hover:text-pink-500 font-medium">郁庭&宜姍</a>
+        <div class="space-x-4 text-sm md:text-base">
+            <a href="#birthdays" class="hover:text-pink-500 font-medium">生日</a>
+            <a href="#personal-zone" class="hover:text-pink-500 font-medium">好朋友專區</a>
+            <a href="#gallery-section" class="hover:text-pink-500 font-medium">歡樂合照</a>
         </div>
     </nav>
 
     <!-- 主視覺區 -->
-    <header class="hero-gradient text-white py-16 px-6 text-center shadow-inner">
-        <h1 class="text-3xl md:text-5xl font-bold mb-4">這是一段關於我們的故事</h1>
-        <p id="dynamic-greeting" class="text-lg opacity-90 italic">記錄每一份相遇的溫暖</p>
+    <header class="hero-gradient text-white py-20 px-6 text-center shadow-inner">
+        <h1 class="text-4xl md:text-6xl font-bold mb-4">回憶紀錄牆</h1>
+        <p class="text-lg opacity-90 italic">珍藏每個人的獨特瞬間</p>
     </header>
 
-    <main class="max-w-6xl mx-auto px-6 -mt-10">
+    <main class="max-w-7xl mx-auto px-6 -mt-10">
         
         <!-- 生日區塊 -->
         <section id="birthdays" class="mb-12">
             <div class="card-glass p-8 rounded-3xl shadow-xl border-t-4 border-pink-400">
                 <h2 class="text-2xl font-bold mb-6 text-pink-600 flex items-center">
-                    <i class="fas fa-birthday-cake mr-3"></i>重要生日
+                    <i class="fas fa-birthday-cake mr-3"></i>近期生日提醒
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="birthday-list">
-                    <!-- 生日項目由 JS 生成 -->
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="birthday-list"></div>
             </div>
         </section>
 
-        <!-- 計數器區塊 -->
-        <section id="counter" class="mb-12">
-            <div class="card-glass p-8 rounded-3xl shadow-xl border-t-4 border-indigo-400">
-                <h2 class="text-2xl font-bold mb-6 text-indigo-600 flex items-center">
-                    <i class="fas fa-user-friends mr-3"></i>我們認識了多久？
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="friendship-list">
-                    <!-- 認識天數項目由 JS 生成 -->
-                </div>
+        <!-- 個人專區 -->
+        <section id="personal-zone" class="mb-20">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800">✨ 好朋友專屬櫥窗</h2>
+                <p class="text-gray-500 mt-2 italic">點擊頭像查看他們的個人特輯與相識紀念</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6" id="member-grid">
+                <!-- 由 JS 動態生成 -->
             </div>
         </section>
 
-        <!-- 陳芊如與林郁庭專區 -->
-        <section id="special-zone" class="mb-12 text-center">
-            <div class="card-glass p-10 rounded-3xl shadow-xl border-t-4 border-purple-400">
-                <h2 class="text-2xl font-bold mb-4 text-purple-600">✨ 陳芊如與林郁庭專區 ✨</h2>
-                <p class="text-gray-500 mb-8 text-sm">點擊下方按鈕開啟專屬回憶相簿</p>
-                
-                <button onclick="toggleAlbum('album-container', this)" class="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-2xl hover:scale-105 transition-all focus:outline-none">
-                    <i class="fas fa-images mr-2"></i> 打開回憶相簿
-                </button>
+        <hr class="border-gray-200 mb-20">
 
-                <div id="album-container" class="album-content mt-12">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="gallery-container">
-                        <!-- 照片列表 -->
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032394_0.jpg" alt="回憶照片" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032405_0.jpg" alt="回憶照片" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032406_0.jpg" alt="回憶照片" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032407_0.jpg" alt="回憶照片" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032408_0.jpg" alt="回憶照片" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032410_0.jpg" alt="回憶照片" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032411_0.jpg" alt="回憶照片" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                    </div>
-                </div>
+        <!-- 合照影音牆 -->
+        <section id="gallery-section" class="mb-20">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800">📸 歡樂合照牆</h2>
+                <p class="text-gray-400 mt-2">我們聚在一起的每個瞬間</p>
             </div>
-        </section>
 
-        <!-- 林郁庭與劉宜姍專區 -->
-        <section id="special-zone-2" class="mb-20 text-center">
-            <div class="card-glass p-10 rounded-3xl shadow-xl border-t-4 border-blue-400">
-                <h2 class="text-2xl font-bold mb-4 text-blue-600">✨ 林郁庭與劉宜姍專區 ✨</h2>
-                <p class="text-gray-500 mb-8 text-sm">點擊下方按鈕開啟專屬回憶相簿</p>
-                
-                <button onclick="toggleAlbum('album-container-2', this)" class="bg-gradient-to-r from-blue-400 to-indigo-400 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-2xl hover:scale-105 transition-all focus:outline-none">
-                    <i class="fas fa-images mr-2"></i> 打開回憶相簿
-                </button>
-
-                <div id="album-container-2" class="album-content mt-12">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="gallery-container-2">
-                        <!-- 林郁庭與劉宜姍專區照片列表 -->
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032412_0.jpg" alt="郁庭&宜姍回憶" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032413_0.jpg" alt="郁庭&宜姍回憶" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032414_0.jpg" alt="郁庭&宜姍回憶" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032415_0.jpg" alt="郁庭&宜姍回憶" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                        <div class="media-card aspect-[3/4] bg-gray-200 rounded-2xl overflow-hidden shadow-sm cursor-pointer" onclick="openLightbox(this)">
-                            <img src="S__214032416_0.jpg" alt="郁庭&宜姍回憶" class="w-full h-full object-cover gallery-item" data-type="image">
-                        </div>
-                    </div>
-                </div>
+            <div class="masonry-grid" id="gallery-container">
+                <!-- 合照內容由 JS 生成 -->
             </div>
         </section>
 
     </main>
 
-    <footer class="text-center py-10 text-gray-400 text-sm">
-        &copy; 2024 專屬於我們的回憶錄 | Made with ❤️
-    </footer>
-
-    <!-- 彈出燈箱 -->
+    <!-- 燈箱 -->
     <div id="lightbox" onclick="closeLightbox()">
-        <div class="relative max-w-[90vw] max-h-[80vh] flex items-center justify-center">
-            <div id="lightbox-content" class="w-full h-full shadow-2xl border-4 border-white bg-black"></div>
-            <button class="absolute -top-10 right-0 text-white text-2xl"><i class="fas fa-times"></i></button>
+        <div class="relative max-w-[95vw] max-h-[90vh] flex flex-col items-center justify-center p-4">
+            <div id="lightbox-content" class="rounded-lg overflow-hidden shadow-2xl bg-black w-full flex justify-center mb-4 border border-white/20"></div>
+            <div id="lightbox-caption" class="text-white text-lg font-bold text-center"></div>
+            <div id="lightbox-subcaption" class="text-pink-300 text-sm mt-2"></div>
+            <button class="absolute -top-12 right-0 text-white text-3xl hover:text-pink-400 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
     </div>
 
     <script>
-        // 1. 生日資料
+        // 好朋友名單
+        const members = ["林郁庭", "洪翊菖", "藍仲庭", "劉宜姍", "陳芊如", "張家軒"];
+        
+        // 個人封面設定
+        const memberCovers = {
+            "林郁庭": "S__214032412_0.jpg",
+            "陳芊如": "S__214032415_0.jpg",
+            "藍仲庭": "S__214032414_0.jpg",
+            "洪翊菖": "S__214032411_0.jpg",
+            "劉宜姍": "S__214032408_0.jpg",
+            "張家軒": "S__214032413_0.jpg",
+        };
+
+        // 相識紀念日資料
+        const meetingAnniversaries = {
+            "林郁庭": "2020/03/20 認識洪翊菖 | 2024/09/06 認識陳芊如 & 藍仲庭",
+            "洪翊菖": "2020/03/20 認識林郁庭 | 2024/06/09 認識張家軒",
+            "陳芊如": "2024/09/06 認識林郁庭",
+            "張家軒": "2024/06/09 認識洪翊菖",
+            "藍仲庭": "2024/09/06 認識林郁庭",
+            "劉宜姍": "相識於美好的緣分"
+        };
+
         const birthdays = [
             { name: "張家軒", month: 4, day: 13 },
             { name: "洪翊菖", month: 6, day: 28 },
@@ -220,112 +188,138 @@
             { name: "藍仲庭", month: 11, day: 27 }
         ];
 
-        // 2. 認識日期資料
-        const friendships = [
-            { pair: "洪翊菖 & 張家軒", date: "2024-06-09" },
-            { pair: "洪翊菖 & 林郁庭", date: "2020-03-20" },
-            { pair: "林郁庭 & 陳芊如", date: "2024-09-06" },
-            { pair: "林郁庭 & 藍仲庭", date: "2024-09-06" }
+        // 媒體資料
+        const mediaData = [
+            { src: 'S__214032394_0.jpg', type: 'image', isPersonal: false, caption: '精彩瞬間' },
+            { src: 'S__214032405_0.jpg', type: 'image', isPersonal: false, caption: '美好回憶' },
+            { src: 'S__214032406_0.jpg', type: 'image', isPersonal: false, caption: '歡笑時刻' },
+            { src: 'S__214032407_0.jpg', type: 'image', isPersonal: false, caption: '歡笑時刻' },
+            { src: 'S__214032408_0.jpg', type: 'image', isPersonal: false, caption: '劉宜姍 個人照' },
+            { src: 'S__214032410_0.jpg', type: 'image', isPersonal: false, caption: '歡笑時刻' },
+            { src: 'S__214032411_0.jpg', type: 'image', isPersonal: false, caption: '洪翊菖 個人照' },
+            { src: 'S__214032412_0.jpg', type: 'image', isPersonal: false, caption: '林郁庭 個人照' },
+            { src: 'S__214032413_0.jpg', type: 'image', isPersonal: false, caption: '張家軒 個人照' },
+            { src: 'S__214032414_0.jpg', type: 'image', isPersonal: false, caption: '藍仲庭 個人照' },
+            { src: 'S__214032415_0.jpg', type: 'image', isPersonal: false, caption: '陳芊如 個人照' },
+            { src: 'S__214032416_0.jpg', type: 'image', isPersonal: false, caption: '歡笑時刻' },
+            // 個人專用標籤（用於點擊櫥窗頭像時顯示）
+            { src: 'S__214032412_0.jpg', type: 'image', isPersonal: true, tag: '林郁庭' },
+            { src: 'S__214032415_0.jpg', type: 'image', isPersonal: true, tag: '陳芊如' },
+            { src: 'S__214032414_0.jpg', type: 'image', isPersonal: true, tag: '藍仲庭' },
+            { src: 'S__214032411_0.jpg', type: 'image', isPersonal: true, tag: '洪翊菖' },
+            { src: 'S__214032408_0.jpg', type: 'image', isPersonal: true, tag: '劉宜姍' },
+            { src: 'S__214032413_0.jpg', type: 'image', isPersonal: true, tag: '張家軒' },
         ];
 
-        // 3. 天氣功能實作
-        async function fetchWeather() {
-            try {
-                let lat, lon, city;
-                try {
-                    const res = await fetch('https://demo.ip-api.com/json/?fields=status,city,lat,lon');
-                    const data = await res.json();
-                    if(data.status === 'success') {
-                        lat = data.lat; lon = data.lon; city = data.city;
-                    } else { throw new Error(); }
-                } catch (e) {
-                    const pos = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-                    });
-                    lat = pos.coords.latitude; lon = pos.coords.longitude; city = "你的位置";
+        function initMemberGrid() {
+            const grid = document.getElementById('member-grid');
+            members.forEach(name => {
+                const card = document.createElement('div');
+                card.className = "member-card text-center cursor-pointer group";
+                card.onclick = () => showMemberGallery(name);
+                
+                const coverSrc = memberCovers[name];
+                const anniversary = meetingAnniversaries[name] || "相識紀念";
+                const avatarHtml = coverSrc 
+                    ? `<img src="${coverSrc}" alt="${name}" onerror="this.parentElement.innerHTML='<i class=\&quot;fas fa-user text-pink-300 text-4xl\&quot;></i>'">`
+                    : `<i class="fas fa-user text-pink-300 text-4xl"></i>`;
+
+                card.innerHTML = `
+                    <div class="member-avatar w-full aspect-square bg-white rounded-full mb-4 flex items-center justify-center shadow-lg overflow-hidden mx-auto">
+                        ${avatarHtml}
+                    </div>
+                    <div class="font-bold text-gray-700 text-lg group-hover:text-pink-500 transition-colors">${name}</div>
+                    <div class="text-[9px] text-pink-400 font-bold uppercase tracking-tighter mt-1 bg-pink-50 px-2 py-0.5 rounded-full inline-block">
+                        <i class="fas fa-calendar-alt mr-1"></i>${anniversary.split('|')[0]}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showMemberGallery(name) {
+            const personalPhotos = mediaData.filter(item => item.isPersonal && item.tag === name);
+            const anniversary = meetingAnniversaries[name] || "";
+            
+            // 優先顯示個人特輯照片
+            const displaySrc = personalPhotos.length > 0 ? personalPhotos[0].src : (memberCovers[name] || '');
+            
+            openLightbox('image', displaySrc, `${name} 的個人特輯`, anniversary);
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('gallery-container');
+            container.innerHTML = '';
+            // 過濾掉帶有 isPersonal: true 的隱藏標籤，只顯示要在牆上公開的圖片
+            const filteredData = mediaData.filter(item => !item.isPersonal);
+
+            filteredData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "media-card mb-6 rounded-2xl overflow-hidden shadow-md bg-white cursor-pointer group";
+                card.onclick = () => openLightbox(item.type, item.src, item.caption);
+                
+                if (item.type === 'image') {
+                    card.innerHTML = `
+                        <div class="relative overflow-hidden">
+                            <img src="${item.src}" class="w-full h-auto block transform group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.src='https://via.placeholder.com/400x600?text=照片讀取失敗'">
+                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <i class="fas fa-expand text-white text-3xl"></i>
+                            </div>
+                        </div>`;
                 }
-                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
-                const weatherData = await weatherRes.json();
-                updateWeatherUI(city, Math.round(weatherData.current_weather.temperature), weatherData.current_weather.weathercode);
-            } catch (error) {
-                document.getElementById('weather-text').innerText = '今日宜好心情';
-                document.getElementById('weather-display').classList.remove('opacity-0');
-            }
+                container.appendChild(card);
+            });
         }
 
-        function updateWeatherUI(city, temp, code) {
-            const iconEl = document.getElementById('weather-icon');
-            const textEl = document.getElementById('weather-text');
-            const greetEl = document.getElementById('dynamic-greeting');
-            const displayEl = document.getElementById('weather-display');
-            let statusText = "", iconClass = "", quote = "記錄每一份相遇的溫暖";
-            if (code <= 3) { statusText = "晴朗"; iconClass = "fa-sun"; quote = "今天天氣晴朗，適合製造更多新回憶！☀️"; }
-            else if (code <= 67) { statusText = "有雨"; iconClass = "fa-cloud-showers-heavy"; quote = "下雨的日子，最適合翻閱舊照片。☔"; }
-            else { statusText = "雲端"; iconClass = "fa-cloud"; quote = "微雲的日子，心情也跟著溫柔了起來。☁️"; }
-            textEl.innerText = `${city} ${temp}°C · ${statusText}`;
-            iconEl.className = `fas ${iconClass}`;
-            greetEl.innerText = quote;
-            displayEl.classList.remove('opacity-0');
-        }
-
-        // 相簿切換功能 (修復為支援多個容器)
-        function toggleAlbum(id, btn) {
-            const container = document.getElementById(id);
-            if (container.style.display === 'block') {
-                container.style.display = 'none';
-                btn.innerHTML = '<i class="fas fa-images mr-2"></i> 打開回憶相簿';
-            } else {
-                container.style.display = 'block';
-                btn.innerHTML = '<i class="fas fa-times mr-2"></i> 關閉回憶相簿';
-                window.scrollTo({ top: container.offsetTop - 150, behavior: 'smooth' });
-            }
-        }
-
-        // 燈箱開啟功能
-        function openLightbox(element) {
-            const item = element.querySelector('.gallery-item');
-            const type = item.getAttribute('data-type');
+        function openLightbox(type, src, caption, subcaption = "") {
             const content = document.getElementById('lightbox-content');
+            const cap = document.getElementById('lightbox-caption');
+            const subcap = document.getElementById('lightbox-subcaption');
             const lightbox = document.getElementById('lightbox');
             
+            cap.innerText = caption || "";
+            subcap.innerText = subcaption || "";
+            
             if (type === 'image') {
-                content.innerHTML = `<img src="${item.src}" class="max-w-full max-h-[80vh] object-contain mx-auto">`;
+                content.innerHTML = src ? `<img src="${src}" class="max-w-full max-h-[70vh] object-contain">` : `<div class="p-20 text-white italic">期待更多照片...</div>`;
+            } else {
+                content.innerHTML = `<video controls autoplay class="max-w-full max-h-[70vh] bg-black"><source src="${src}" type="video/mp4"></video>`;
             }
             lightbox.style.display = 'flex';
         }
 
         function closeLightbox() {
-            const lightbox = document.getElementById('lightbox');
-            const content = document.getElementById('lightbox-content');
-            lightbox.style.display = 'none';
-            content.innerHTML = '';
+            document.getElementById('lightbox').style.display = 'none';
+            document.getElementById('lightbox-content').innerHTML = '';
         }
 
-        function initData() {
+        function initBirthdays() {
             const now = new Date();
-            const bdayList = document.getElementById('birthday-list');
-            const friendList = document.getElementById('friendship-list');
-            birthdays.forEach(person => {
-                let nextBday = new Date(now.getFullYear(), person.month - 1, person.day);
-                if (now > nextBday) nextBday.setFullYear(now.getFullYear() + 1);
-                const diff = Math.ceil((nextBday - now) / (1000 * 60 * 60 * 24));
-                const card = document.createElement('div');
-                card.className = "p-4 rounded-xl border border-pink-100 birthday-tag flex justify-between items-center shadow-sm";
-                card.innerHTML = `<div><div class="font-bold text-gray-800">${person.name}</div><div class="text-xs text-gray-600">${person.month}月${person.day}日</div></div><div class="text-right"><div class="text-sm font-bold text-pink-700">剩 ${diff} 天</div><div class="text-[10px] text-pink-600 uppercase font-bold">Birthday</div></div>`;
-                bdayList.appendChild(card);
+            const list = document.getElementById('birthday-list');
+            const sorted = [...birthdays].sort((a, b) => {
+                let da = new Date(now.getFullYear(), a.month - 1, a.day);
+                let db = new Date(now.getFullYear(), b.month - 1, b.day);
+                if (da < now) da.setFullYear(now.getFullYear() + 1);
+                if (db < now) db.setFullYear(now.getFullYear() + 1);
+                return da - db;
             });
-            friendships.forEach(item => {
-                const startDate = new Date(item.date);
-                const diffDays = Math.floor(Math.abs(now - startDate) / (1000 * 60 * 60 * 24));
+
+            sorted.forEach(p => {
+                let next = new Date(now.getFullYear(), p.month - 1, p.day);
+                if (now > next) next.setFullYear(now.getFullYear() + 1);
+                const diff = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
                 const card = document.createElement('div');
-                card.className = "p-6 rounded-2xl bg-white border border-indigo-50 shadow-sm hover:shadow-md transition-shadow";
-                card.innerHTML = `<div class="text-sm text-indigo-400 font-bold mb-1">${item.pair}</div><div class="text-3xl font-bold text-gray-700">${diffDays} <span class="text-lg font-normal">天</span></div><div class="text-[10px] text-gray-400 mt-2 italic font-sans">Since ${item.date}</div>`;
-                friendList.appendChild(card);
+                card.className = "p-4 rounded-xl border border-pink-100 bg-white flex justify-between items-center shadow-sm hover:border-pink-300 transition-colors";
+                card.innerHTML = `<div><div class="font-bold text-gray-800">${p.name}</div><div class="text-xs text-gray-500">${p.month}/${p.day}</div></div><div class="text-pink-500 font-bold text-sm">剩 ${diff} 天</div>`;
+                list.appendChild(card);
             });
         }
 
-        initData();
-        fetchWeather();
+        window.onload = () => {
+            initBirthdays();
+            initMemberGrid();
+            renderGallery();
+        };
     </script>
 </body>
 </html>

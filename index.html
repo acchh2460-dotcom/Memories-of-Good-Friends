@@ -26,57 +26,41 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        /* 媒體卡片動畫 */
-        .media-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            break-inside: avoid;
-        }
-        .media-card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        /* 燈箱樣式 */
-        #lightbox {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* 瀑布流佈局 */
-        .masonry-grid {
-            column-count: 2;
-            column-gap: 1.5rem;
-        }
-        @media (min-width: 768px) { .masonry-grid { column-count: 3; } }
-        @media (min-width: 1024px) { .masonry-grid { column-count: 4; } }
-
-        /* 個人專區樣式 */
-        .member-avatar {
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: 3px solid white;
-            background: #fff5f5;
-        }
-        .member-card:hover .member-avatar {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 25px -5px rgba(255, 154, 158, 0.5);
-            border-color: #ff9a9e;
-        }
-        .member-avatar i {
-            font-size: 2.5rem;
-            color: #ffd1d1;
-        }
-
         /* 滾動條美化 */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #ffb6c1; border-radius: 10px; }
+
+        .weather-card {
+            background: linear-gradient(to bottom right, #ffffff, #fff5f5);
+            transition: all 0.3s ease;
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { background-color: rgba(239, 68, 68, 0.1); }
+            50% { background-color: rgba(239, 68, 68, 0.2); }
+        }
+        .warning-active {
+            animation: pulse-red 2s infinite;
+            border: 1px solid #ef4444;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .btn-all-photos {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+        }
+        .btn-all-photos:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(244, 114, 182, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -87,19 +71,85 @@
             <div class="text-xl font-bold text-pink-500 px-2"><i class="fas fa-heart mr-2"></i>我們的回憶</div>
         </div>
         <div class="space-x-4 text-sm md:text-base">
+            <a href="#weather-section" class="hover:text-pink-500 font-medium">天氣</a>
             <a href="#birthdays" class="hover:text-pink-500 font-medium">生日</a>
-            <a href="#personal-zone" class="hover:text-pink-500 font-medium">好朋友專區</a>
-            <a href="#gallery-section" class="hover:text-pink-500 font-medium">歡樂合照</a>
+            <a href="#personal-zone" class="hover:text-pink-500 font-medium">專區</a>
         </div>
     </nav>
 
     <!-- 主視覺區 -->
-    <header class="hero-gradient text-white py-20 px-6 text-center shadow-inner">
+    <header class="hero-gradient text-white py-16 px-6 text-center shadow-inner">
         <h1 class="text-4xl md:text-6xl font-bold mb-4">回憶紀錄牆</h1>
-        <p class="text-lg opacity-90 italic">珍藏每個人的獨特瞬間</p>
+        <div id="live-clock" class="text-xl md:text-2xl font-mono mt-2 opacity-90"></div>
     </header>
 
     <main class="max-w-7xl mx-auto px-6 -mt-10">
+        
+        <!-- 彰化天氣資訊區塊 -->
+        <section id="weather-section" class="mb-12">
+            <div class="card-glass p-6 md:p-8 rounded-3xl shadow-xl border-t-4 border-blue-400">
+                <div class="flex flex-wrap justify-between items-end mb-6 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-blue-600 flex items-center">
+                            <i class="fas fa-cloud-sun-rain mr-3"></i>彰化縣即時天氣
+                        </h2>
+                        <p class="text-sm text-gray-500 mt-1">資料來源：中央氣象署 (CWA)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="town-select" class="text-sm font-medium">切換鄉鎮：</label>
+                        <select id="town-select" class="bg-white border border-gray-200 rounded-lg px-3 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-400">
+                            <!-- JS 動態生成 -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 強風特報顯示 -->
+                <div id="wind-warning" class="hidden mb-6 p-4 rounded-xl flex items-center gap-3 text-red-600">
+                    <i class="fas fa-exclamation-triangle animate-bounce"></i>
+                    <span class="font-bold">陸上強風特報：彰化縣目前處於警告範圍，請注意安全！</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- 主要天氣卡片 -->
+                    <div class="weather-card p-5 rounded-2xl shadow-sm border border-blue-50">
+                        <div class="text-gray-400 text-sm mb-2"><i class="fas fa-umbrella mr-2"></i>降雨機率</div>
+                        <div id="weather-pop" class="text-3xl font-bold text-blue-500">--%</div>
+                    </div>
+                    <div class="weather-card p-5 rounded-2xl shadow-sm border border-blue-50">
+                        <div class="text-gray-400 text-sm mb-2"><i class="fas fa-tint mr-2"></i>相對濕度</div>
+                        <div id="weather-rh" class="text-3xl font-bold text-cyan-600">--%</div>
+                    </div>
+                    <div class="weather-card p-5 rounded-2xl shadow-sm border border-blue-50">
+                        <div class="text-gray-400 text-sm mb-2"><i class="fas fa-wind mr-2"></i>風向風速</div>
+                        <div id="weather-wind" class="text-lg font-bold text-gray-700">讀取中...</div>
+                        <div id="weather-wind-speed" class="text-sm text-gray-500">-- m/s</div>
+                    </div>
+                    <div class="weather-card p-5 rounded-2xl shadow-sm border border-blue-50">
+                        <div class="text-gray-400 text-sm mb-2"><i class="fas fa-hourglass-half mr-2"></i>日出日落倒數</div>
+                        <div id="sun-countdown" class="text-xl font-bold text-orange-500">計算中...</div>
+                        <div id="sun-next-event" class="text-xs text-gray-400 mt-1">--</div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="flex items-center justify-around bg-orange-50/50 p-4 rounded-2xl">
+                        <div class="text-center">
+                            <div class="text-xs text-orange-400 font-bold uppercase mb-1">日出時間</div>
+                            <div id="time-sunrise" class="text-xl font-bold text-gray-700">--:--</div>
+                        </div>
+                        <div class="h-10 w-px bg-orange-200"></div>
+                        <div class="text-center">
+                            <div class="text-xs text-blue-400 font-bold uppercase mb-1">日落時間</div>
+                            <div id="time-sunset" class="text-xl font-bold text-gray-700">--:--</div>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col justify-center">
+                        <p class="text-xs text-gray-400">最後更新時間</p>
+                        <p id="weather-update-time" class="text-sm font-mono text-gray-600">----/--/-- --:--:--</p>
+                    </div>
+                </div>
+            </div>
+        </section>
         
         <!-- 生日區塊 -->
         <section id="birthdays" class="mb-12">
@@ -115,60 +165,32 @@
         <section id="personal-zone" class="mb-20">
             <div class="text-center mb-10">
                 <h2 class="text-3xl font-bold text-gray-800">✨ 好朋友專屬櫥窗</h2>
-                <p class="text-gray-500 mt-2 italic">目前尚未上傳個人封面照</p>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6" id="member-grid">
-                <!-- 由 JS 動態生成 -->
-            </div>
-        </section>
-
-        <hr class="border-gray-200 mb-20">
-
-        <!-- 合照影音牆 -->
-        <section id="gallery-section" class="mb-20">
-            <div class="text-center mb-10">
-                <h2 class="text-3xl font-bold text-gray-800">📸 歡樂合照牆</h2>
-                <p class="text-gray-400 mt-2">回憶準備中...</p>
-            </div>
-
-            <div class="masonry-grid" id="gallery-container">
-                <div class="col-span-full py-20 text-center text-gray-300 italic">
-                    <i class="fas fa-images text-5xl mb-4 block"></i>
-                    尚未有公開合照
+                <p class="text-pink-500 mt-2 font-medium bg-pink-50 inline-block px-4 py-1 rounded-full text-sm">點擊名字可以更多個人照</p>
+                
+                <!-- 全體照片按鈕與連結 -->
+                <div class="mt-8">
+                    <a href="https://sites.google.com/view/friends-multimedia-memoir/%E9%A6%96%E9%A0%81_" target="_blank" class="btn-all-photos bg-gradient-to-r from-pink-400 to-rose-400 text-white px-8 py-3 rounded-full font-bold shadow-lg items-center mx-auto hover:from-pink-500 hover:to-rose-500 active:scale-95 transition-all">
+                        <i class="fas fa-users-viewfinder mr-2"></i> 全體照片
+                    </a>
                 </div>
             </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6" id="member-grid"></div>
         </section>
 
     </main>
 
-    <!-- 燈箱 -->
-    <div id="lightbox" onclick="closeLightbox()">
-        <div class="relative max-w-[95vw] max-h-[90vh] flex flex-col items-center justify-center p-4">
-            <div id="lightbox-content" class="rounded-lg overflow-hidden shadow-2xl bg-black w-full flex justify-center mb-4 border border-white/20"></div>
-            <div id="lightbox-caption" class="text-white text-lg font-bold text-center"></div>
-            <div id="lightbox-subcaption" class="text-pink-300 text-sm mt-2"></div>
-            <button class="absolute -top-12 right-0 text-white text-3xl hover:text-pink-400 transition-colors">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    </div>
-
     <script>
-        // 好朋友名單
+        const API_KEY = 'CWA-6B25A90C-BFD4-4C12-8991-E9F46EEAA1F2';
+        const CHANGHUA_TOWNS = [
+            "彰化市", "芬園鄉", "花壇鄉", "秀水鄉", "鹿港鎮", "福興鄉", "線西鄉", "和美鎮", "伸港鄉", 
+            "員林市", "社頭鄉", "永靖鄉", "埔心鄉", "溪湖鎮", "大村鄉", "埔鹽鄉", "田中鎮", "北斗鎮", 
+            "田尾鄉", "埤頭鄉", "溪州鄉", "竹塘鄉", "二林鎮", "大城鄉", "芳苑鄉", "二水鄉"
+        ];
+
         const members = ["林郁庭", "洪翊菖", "藍仲庭", "劉宜姍", "陳芊如", "張家軒"];
         
-        // 個人封面設定 (已清空)
-        const memberCovers = {};
-
-        // 相識紀念日資料
-        const meetingAnniversaries = {
-            "林郁庭": "2020/03/20 認識洪翊菖 | 2024/09/06 認識陳芊如 & 藍仲庭",
-            "洪翊菖": "2020/03/20 認識林郁庭 | 2024/06/09 認識張家軒",
-            "陳芊如": "2024/09/06 認識林郁庭",
-            "張家軒": "2024/06/09 認識洪翊菖",
-            "藍仲庭": "2024/09/06 認識林郁庭",
-            "劉宜姍": "相識於美好的緣分"
+        const memberAvatars = {
+            "預設": ""
         };
 
         const birthdays = [
@@ -180,79 +202,166 @@
             { name: "藍仲庭", month: 11, day: 27 }
         ];
 
-        // 媒體資料 (已清空)
-        const mediaData = [];
+        function updateClock() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const liveClock = document.getElementById('live-clock');
+            if (liveClock) liveClock.innerText = `${y}/${m}/${d} ${hh}:${mm}:${ss}`;
+        }
+
+        async function fetchWeatherData(townName = "彰化市") {
+            try {
+                const weatherUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-017?Authorization=${API_KEY}&locationName=${encodeURIComponent(townName)}`;
+                const response = await fetch(weatherUrl);
+                const data = await response.json();
+                
+                if (data.success === "true" && data.records?.locations?.[0]?.location?.[0]) {
+                    const location = data.records.locations[0].location[0];
+                    const weatherElements = location.weatherElement;
+                    
+                    const getVal = (name) => {
+                        const el = weatherElements.find(e => e.elementName === name);
+                        return el?.time?.[0]?.elementValue?.[0]?.value || "--";
+                    };
+
+                    const pop = getVal("PoP12h");
+                    const rh = getVal("RH");
+                    const ws = getVal("WS");
+                    const wd = getVal("WD");
+
+                    document.getElementById('weather-pop').innerText = pop !== "--" ? `${pop}%` : "--%";
+                    document.getElementById('weather-rh').innerText = rh !== "--" ? `${rh}%` : "--%";
+                    document.getElementById('weather-wind').innerText = wd !== "--" ? wd : "無資料";
+                    document.getElementById('weather-wind-speed').innerText = ws !== "--" ? `${ws} m/s` : "-- m/s";
+                    
+                    const now = new Date();
+                    document.getElementById('weather-update-time').innerText = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+                }
+
+                const alertUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-001?Authorization=${API_KEY}`;
+                const alertRes = await fetch(alertUrl);
+                const alertData = await alertRes.json();
+                const windWarning = document.getElementById('wind-warning');
+                
+                let hasChanghuaWarning = false;
+                if (alertData.records?.record) {
+                    alertData.records.record.forEach(rec => {
+                        const desc = rec.datasetInfo?.datasetDescription || "";
+                        const contents = JSON.stringify(rec.contents || "");
+                        if (desc.includes("強風") && contents.includes("彰化縣")) {
+                            hasChanghuaWarning = true;
+                        }
+                    });
+                }
+                
+                if (windWarning) {
+                    if (hasChanghuaWarning) {
+                        windWarning.classList.remove('hidden');
+                        windWarning.classList.add('warning-active');
+                    } else {
+                        windWarning.classList.add('hidden');
+                        windWarning.classList.remove('warning-active');
+                    }
+                }
+
+            } catch (error) {
+                console.error("Weather API Error:", error);
+            }
+        }
+
+        function updateSunInfo() {
+            const now = new Date();
+            const sunrise = new Date(); sunrise.setHours(6, 30, 0);
+            const sunset = new Date(); sunset.setHours(18, 0, 0);
+
+            const sunriseEl = document.getElementById('time-sunrise');
+            const sunsetEl = document.getElementById('time-sunset');
+            if (sunriseEl) sunriseEl.innerText = "06:30";
+            if (sunsetEl) sunsetEl.innerText = "18:00";
+
+            let target, label;
+            if (now < sunrise) {
+                target = sunrise;
+                label = "距離日出";
+            } else if (now < sunset) {
+                target = sunset;
+                label = "距離日落";
+            } else {
+                target = new Date(sunrise);
+                target.setDate(target.getDate() + 1);
+                label = "距離明日日出";
+            }
+
+            const diff = target - now;
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+
+            const countdownEl = document.getElementById('sun-countdown');
+            const nextEventEl = document.getElementById('sun-next-event');
+            if (countdownEl) countdownEl.innerText = `${h}h ${m}m ${s}s`;
+            if (nextEventEl) nextEventEl.innerText = label;
+        }
+
+        function init() {
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            setInterval(updateSunInfo, 1000);
+            updateSunInfo();
+
+            const select = document.getElementById('town-select');
+            if (select) {
+                CHANGHUA_TOWNS.forEach(town => {
+                    const opt = document.createElement('option');
+                    opt.value = town;
+                    opt.innerText = town;
+                    select.appendChild(opt);
+                });
+                select.addEventListener('change', (e) => fetchWeatherData(e.target.value));
+            }
+
+            fetchWeatherData("彰化市");
+            initBirthdays();
+            initMemberGrid();
+        }
 
         function initMemberGrid() {
             const grid = document.getElementById('member-grid');
-            grid.innerHTML = '';
+            if (!grid) return;
+            grid.innerHTML = ""; 
+
             members.forEach(name => {
                 const card = document.createElement('div');
-                card.className = "member-card text-center cursor-pointer group";
-                card.onclick = () => showMemberGallery(name);
+                card.className = "member-card text-center cursor-default group";
                 
-                const coverSrc = memberCovers[name];
-                const anniversary = meetingAnniversaries[name] || "相識紀念";
-                const avatarHtml = `<i class="fas fa-user"></i>`;
+                const avatarUrl = memberAvatars[name];
+                let avatarContent = `<i class="fas fa-user text-gray-400 text-3xl"></i>`;
+                
+                if (avatarUrl) {
+                    avatarContent = `<img src="${avatarUrl}" alt="${name}" class="avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                     <i class="fas fa-user text-gray-400 text-3xl hidden"></i>`;
+                }
 
                 card.innerHTML = `
-                    <div class="member-avatar w-full aspect-square rounded-full mb-4 flex items-center justify-center shadow-lg overflow-hidden mx-auto border-2 border-dashed border-pink-200">
-                        ${avatarHtml}
+                    <div class="member-avatar w-24 h-24 rounded-full mb-4 flex items-center justify-center shadow-lg mx-auto border-4 border-white transition-all overflow-hidden bg-white">
+                        ${avatarContent}
                     </div>
-                    <div class="font-bold text-gray-700 text-lg group-hover:text-pink-500 transition-colors">${name}</div>
-                    <div class="text-[9px] text-pink-400 font-bold uppercase tracking-tighter mt-1 bg-pink-50 px-2 py-0.5 rounded-full inline-block">
-                        <i class="fas fa-calendar-alt mr-1"></i>${anniversary.split('|')[0]}
-                    </div>
+                    <div class="font-bold text-gray-700 text-lg hover:text-pink-500 hover:scale-110 transition-all cursor-pointer inline-block px-2 rounded-lg" title="查看更多個人照">${name}</div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        function showMemberGallery(name) {
-            const anniversary = meetingAnniversaries[name] || "";
-            openLightbox('image', null, `${name} 的個人特輯`, anniversary);
-        }
-
-        function renderGallery() {
-            const container = document.getElementById('gallery-container');
-            // 此處保持原有邏輯，但因為 mediaData 為空，所以不會渲染圖片
-            if (mediaData.filter(item => !item.isPersonal).length === 0) {
-                return; 
-            }
-            container.innerHTML = '';
-        }
-
-        function openLightbox(type, src, caption, subcaption = "") {
-            const content = document.getElementById('lightbox-content');
-            const cap = document.getElementById('lightbox-caption');
-            const subcap = document.getElementById('lightbox-subcaption');
-            const lightbox = document.getElementById('lightbox');
-            
-            cap.innerText = caption || "";
-            subcap.innerText = subcaption || "";
-            
-            if (!src) {
-                content.innerHTML = `<div class="p-20 text-white italic text-center">
-                    <i class="fas fa-camera-retro text-4xl mb-4 block text-pink-500"></i>
-                    照片整理中，敬請期待...
-                </div>`;
-            } else if (type === 'image') {
-                content.innerHTML = `<img src="${src}" class="max-w-full max-h-[70vh] object-contain">`;
-            } else {
-                content.innerHTML = `<video controls autoplay class="max-w-full max-h-[70vh] bg-black"><source src="${src}" type="video/mp4"></video>`;
-            }
-            lightbox.style.display = 'flex';
-        }
-
-        function closeLightbox() {
-            document.getElementById('lightbox').style.display = 'none';
-            document.getElementById('lightbox-content').innerHTML = '';
-        }
-
         function initBirthdays() {
             const now = new Date();
             const list = document.getElementById('birthday-list');
-            list.innerHTML = '';
+            if (!list) return;
             const sorted = [...birthdays].sort((a, b) => {
                 let da = new Date(now.getFullYear(), a.month - 1, a.day);
                 let db = new Date(now.getFullYear(), b.month - 1, b.day);
@@ -266,17 +375,13 @@
                 if (now > next) next.setFullYear(now.getFullYear() + 1);
                 const diff = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
                 const card = document.createElement('div');
-                card.className = "p-4 rounded-xl border border-pink-100 bg-white flex justify-between items-center shadow-sm hover:border-pink-300 transition-colors";
+                card.className = "p-4 rounded-xl border border-pink-100 bg-white flex justify-between items-center shadow-sm";
                 card.innerHTML = `<div><div class="font-bold text-gray-800">${p.name}</div><div class="text-xs text-gray-500">${p.month}/${p.day}</div></div><div class="text-pink-500 font-bold text-sm">剩 ${diff} 天</div>`;
                 list.appendChild(card);
             });
         }
 
-        window.onload = () => {
-            initBirthdays();
-            initMemberGrid();
-            renderGallery();
-        };
+        window.onload = init;
     </script>
 </body>
 </html>

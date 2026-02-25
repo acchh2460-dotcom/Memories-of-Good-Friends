@@ -54,12 +54,11 @@
 
         .btn-all-photos {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            display: inline-flex;
+            text-decoration: none !important; /* 強制移除底線 */
         }
         .btn-all-photos:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(244, 114, 182, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -5px rgba(244, 114, 182, 0.5);
         }
     </style>
 </head>
@@ -167,10 +166,11 @@
                 <h2 class="text-3xl font-bold text-gray-800">✨ 好朋友專屬櫥窗</h2>
                 <p class="text-pink-500 mt-2 font-medium bg-pink-50 inline-block px-4 py-1 rounded-full text-sm">點擊名字可以更多個人照</p>
                 
-                <!-- 全體照片按鈕與連結 -->
-                <div class="mt-8">
-                    <a href="https://sites.google.com/view/friends-multimedia-memoir/%E9%A6%96%E9%A0%81_" target="_blank" class="btn-all-photos bg-gradient-to-r from-pink-400 to-rose-400 text-white px-8 py-3 rounded-full font-bold shadow-lg items-center mx-auto hover:from-pink-500 hover:to-rose-500 active:scale-95 transition-all">
-                        <i class="fas fa-users-viewfinder mr-2"></i> 全體照片
+                <!-- 全體照片按鈕：強化對齊與尺寸穩定性 -->
+                <div class="mt-8 flex justify-center w-full">
+                    <a href="https://sites.google.com/view/friends-multimedia-memoir/%E9%A6%96%E9%A0%81_" target="_blank" class="btn-all-photos min-w-[180px] bg-gradient-to-r from-pink-400 to-rose-400 text-white px-8 py-3.5 rounded-full font-bold shadow-lg inline-flex items-center justify-center hover:from-pink-500 hover:to-rose-500 active:scale-95 transition-all">
+                        <i class="fas fa-users-viewfinder mr-3 text-xl"></i>
+                        <span>全體照片</span>
                     </a>
                 </div>
             </div>
